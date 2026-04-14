@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Build artifacts
+WifiScanner.app/
+WifiScanner
+WifiScanner_unsigned
+
+# Intermediates
+*.o
