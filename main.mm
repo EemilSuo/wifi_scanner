@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <iostream>
 
-using namespace std;
 
 int main() {
   @autoreleasepool {
@@ -24,8 +23,8 @@ int main() {
 
     // On macOS, status 3 (kCLAuthorizationStatusAuthorizedAlways) is common for authorized apps
     if (status == kCLAuthorizationStatusDenied || status == kCLAuthorizationStatusRestricted) {
-        cerr << "Error: Location Services permission denied. SSIDs will be hidden." << endl;
-        cerr << "Please enable Location Services for this app or Terminal in System Settings." << endl;
+        std::cerr << "Error: Location Services permission denied. SSIDs will be hidden." << std::endl;
+        std::cerr << "Please enable Location Services for this app or Terminal in System Settings." << std::endl;
     }
 
     // 2. Initialize Wi-Fi Client
@@ -33,43 +32,44 @@ int main() {
     CWInterface *interface = [client interface];
 
     if (!interface) {
-        cerr << "Error: No Wi-Fi interface found." << endl;
+        std::cerr << "Error: No Wi-Fi interface found." << std::endl;
         return 1;
     }
 
-    cout << "Scanning for Wi-Fi networks on " << [[interface interfaceName] UTF8String] << "..." << endl;
-    cout << left << setw(30) << "SSID" << setw(20) << "BSSID" << "Signal strength" << endl;
-    cout << string(70, '-') << endl;
+    std::cout << "Scanning for Wi-Fi networks on " << [[interface interfaceName] UTF8String] << "..." << std::endl;
+    std::cout << std::left << std::setw(30) << "SSID" << std::setw(20) << "BSSID" << "Signal strength" << std::endl;
+    std::cout << std::string(70, '-') << std::endl;
 
     // 3. Scan for Networks
     NSError *error = nil;
     NSSet<CWNetwork *> *networks = [interface scanForNetworksWithSSID:nil error:&error];
 
     if (error) {
-        cerr << "Error scanning: " << [[error localizedDescription] UTF8String] << endl;
+        std::cerr << "Error scanning: " << [[error localizedDescription] UTF8String] << std::endl;
         return 1;
     }
 
-    // 4. Display Results
-    for (CWNetwork *network in networks) {
+// Sort networks by RSSI (strongest first)
+  NSArray<CWNetwork *> *sortedNetworks = [[networks allObjects]
+      sortedArrayUsingComparator:^NSComparisonResult(CWNetwork *a, CWNetwork *b) {
+          return [@([b rssiValue]) compare:@([a rssiValue])];
+      }];
+
+  for (CWNetwork *network in sortedNetworks) {
         NSString *ssidName = [network ssid];
-        // Fallback for some macOS versions where ssidData is more reliable
-        //if (!ssidName && [network ssidData]) {
-        //    ssidName = [[NSString alloc] initWithData:[network ssidData] encoding:NSUTF8StringEncoding];
-        //}
-        
-        string ssid = [ssidName UTF8String] ?: "<Hidden>";
-        string bssid = [[network bssid] UTF8String] ?: "<Unknown>";
+       
+        std::string ssid = ssidName ? std::string([ssidName UTF8String]) : "<Hidden>";
+        std::string bssid = [network bssid] ? std::string([[network bssid] UTF8String]) : "<Unknown>";
         long rssi = [network rssiValue];
 
-        cout << left << setw(30) << ssid << setw(20) << bssid << rssi << " dBm ";
+        std::cout << std::left << std::setw(30) << ssid << std::setw(20) << bssid << rssi << " dBm ";
 
-        if (rssi > -50) cout << "[Excellent]";
-        else if (rssi > -70) cout << "[Good]";
-        else if (rssi > -80) cout << "[Fair]";
-        else cout << "[Weak]";
+        if (rssi > -50) std::cout << "[Excellent]";
+        else if (rssi > -70) std::cout << "[Good]";
+        else if (rssi > -80) std::cout << "[Fair]";
+        else std::cout << "[Weak]";
 
-        cout << endl;
+        std::cout << std::endl;
     }
   }
   return 0;

@@ -24,7 +24,7 @@ run:
 
 # Clean build artifacts
 clean:
-	rm -rf WifiScanner WifiScanner_unsigned Info.plist.o
+	rm -rf WifiScanner WifiScanner_unsigned Info.plist.o $(APP_BUNDLE)
 	@echo "Cleaned build artifacts."
 
 .PHONY: all build run clean
